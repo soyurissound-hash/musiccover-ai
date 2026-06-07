@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { generatedCovers } from "@/lib/mock-results";
 
@@ -16,21 +16,50 @@ type UploadPreview = {
 
 export function Dashboard() {
   const [uploads, setUploads] = useState<UploadPreview[]>([]);
+  const uploadsRef = useRef<UploadPreview[]>([]);
   const [selectedStyle, setSelectedStyle] = useState("Cinematic");
   const [selectedRatio, setSelectedRatio] = useState("1:1 Album Cover");
   const [songTitle, setSongTitle] = useState("Midnight Frequency");
   const [mood, setMood] = useState("Dreamy, confident, neon, late-night energy");
   const [notes, setNotes] = useState("Use a bold central character, purple atmosphere, and premium editorial lighting.");
 
+  useEffect(() => {
+    uploadsRef.current = uploads;
+  }, [uploads]);
+
+  useEffect(() => {
+    return () => {
+      uploadsRef.current.forEach((upload) => URL.revokeObjectURL(upload.url));
+    };
+  }, []);
+
   function handleUpload(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
-    const previews = files.map((file) => ({
-      id: `${file.name}-${file.lastModified}`,
+    const files = Array.from(event.currentTarget.files ?? []);
+
+    if (files.length === 0) {
+      return;
+    }
+
+    const previews = files.map((file, index) => ({
+      id: `${file.name}-${file.lastModified}-${index}`,
       name: file.name,
       url: URL.createObjectURL(file),
     }));
 
-    setUploads((current) => [...current, ...previews].slice(-6));
+    setUploads((current) => {
+      const nextUploads = [...current, ...previews].slice(-6);
+      const activeUrls = new Set(nextUploads.map((upload) => upload.url));
+
+      [...current, ...previews].forEach((upload) => {
+        if (!activeUrls.has(upload.url)) {
+          URL.revokeObjectURL(upload.url);
+        }
+      });
+
+      return nextUploads;
+    });
+
+    event.currentTarget.value = "";
   }
 
   const promptSummary = useMemo(
