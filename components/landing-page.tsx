@@ -24,6 +24,7 @@ export function LandingPage() {
         <div className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
           <a className="transition hover:text-white" href="#features">Features</a>
           <a className="transition hover:text-white" href="#dashboard">Dashboard</a>
+          <a className="transition hover:text-white" href="/characters">Characters</a>
           <a className="transition hover:text-white" href="#gallery">Gallery</a>
         </div>
         <a

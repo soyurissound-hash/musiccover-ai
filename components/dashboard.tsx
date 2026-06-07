@@ -1,8 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
+import { CharacterSelect } from "@/components/character-select";
+import { DEFAULT_CHARACTER } from "@/lib/characters";
+import type { Character } from "@/lib/characters";
 import { generatedCovers } from "@/lib/mock-results";
 
 const styles = ["Anime", "Illustration", "Watercolor", "Cinematic", "K-Pop"];
@@ -21,6 +24,7 @@ export function Dashboard() {
   const [songTitle, setSongTitle] = useState("Midnight Frequency");
   const [mood, setMood] = useState("Dreamy, confident, neon, late-night energy");
   const [notes, setNotes] = useState("Use a bold central character, purple atmosphere, and premium editorial lighting.");
+  const [selectedCharacter, setSelectedCharacter] = useState<Character>(DEFAULT_CHARACTER);
 
   function handleUpload(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
@@ -33,9 +37,13 @@ export function Dashboard() {
     setUploads((current) => [...current, ...previews].slice(-6));
   }
 
+  const handleCharacterSelect = useCallback((character: Character) => {
+    setSelectedCharacter(character);
+  }, []);
+
   const promptSummary = useMemo(
-    () => `${songTitle || "Untitled track"} · ${selectedStyle} · ${selectedRatio}`,
-    [songTitle, selectedRatio, selectedStyle],
+    () => `${songTitle || "Untitled track"} · ${selectedCharacter.name} · ${selectedStyle} · ${selectedRatio}`,
+    [selectedCharacter.name, selectedRatio, selectedStyle, songTitle],
   );
 
   return (
@@ -111,6 +119,8 @@ export function Dashboard() {
           </div>
 
           <div className="space-y-6">
+            <CharacterSelect selectedCharacterId={selectedCharacter.id} onSelect={handleCharacterSelect} />
+
             <div className="glass-card rounded-[2rem] p-6">
               <div className="grid gap-6 lg:grid-cols-2">
                 <div>
@@ -158,7 +168,9 @@ export function Dashboard() {
               <div className="mt-6 rounded-3xl border border-purple-300/20 bg-black/30 p-5">
                 <p className="text-xs font-bold uppercase tracking-[0.24em] text-purple-300">Prompt preview</p>
                 <p className="mt-3 font-display text-2xl font-bold text-white">{promptSummary}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-400">Mood: {mood || "No mood added yet."}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-400">Character: {selectedCharacter.description || "No character description added yet."}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-400">Traits: {selectedCharacter.hairColor || "Unknown hair"} hair, {selectedCharacter.eyeColor || "unknown"} eyes.</p>
+                <p className="mt-1 text-sm leading-6 text-slate-400">Mood: {mood || "No mood added yet."}</p>
                 <p className="mt-1 text-sm leading-6 text-slate-400">Notes: {notes || "No notes added yet."}</p>
                 <button className="mt-6 w-full rounded-2xl bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 px-6 py-4 text-sm font-black uppercase tracking-[0.25em] text-white shadow-glow transition hover:-translate-y-1" type="button">
                   Generate mock covers
